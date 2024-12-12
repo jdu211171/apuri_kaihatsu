@@ -378,6 +378,7 @@
     "students": "Talabalar",
     "ID": "ID",
     "name": "Ism",
+    "placeholder": "Ism bo'yicha qidirish",
     "email": "Email",
     "studentId": "Talaba ID",
     "phoneNumber": "Telefon raqami",

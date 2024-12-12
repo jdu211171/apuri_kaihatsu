@@ -22,6 +22,7 @@ import { toast } from "@/components/ui/use-toast";
 import useApiMutation from "@/lib/useApiMutation";
 import Parent from "@/types/parent";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const formSchema = z.object({
   given_name: z.string().min(1).max(50),
@@ -46,12 +47,26 @@ export default function CreateParent() {
       email: "",
     },
   });
+
+  const [optimisticParent, setOptimisticParent] = useState<Parent | null>(null);
+
   const { mutate, isPending } = useApiMutation<{ parent: Parent }>(
     `parent/create`,
     "POST",
     ["createParent"],
     {
+      onMutate: (variables) => {
+        setOptimisticParent({
+          id: Math.random(),
+          given_name: variables.given_name,
+          family_name: variables.family_name,
+          email: variables.email,
+          phone_number: variables.phone_number,
+          students: variables.students,
+        } as Parent);
+      },
       onSuccess: (data) => {
+        setOptimisticParent(data.parent);
         toast({
           title: t("ParentCreated"),
           description: tName("name", { ...data.parent }),
@@ -59,6 +74,9 @@ export default function CreateParent() {
         setSelectedStudents([]);
         form.reset();
         router.push("/parents");
+      },
+      onError: () => {
+        setOptimisticParent(null);
       },
     }
   );
@@ -80,146 +98,158 @@ export default function CreateParent() {
   }, [form]);
 
   return (
-    <div className="w-full space-y-8">
-      <div className="flex justify-between">
-        <h1 className="text-3xl w-2/4 font-bold">{t("CreateParent")}</h1>
-        <div className="flex gap-2">
-          <Link href="/fromcsv/parent">
-            <Button variant={"secondary"}>
-              <div className="bg-gray-200 p-1 rounded-sm mr-2">
-                <svg
-                  className="w-4 h-4 text-gray-600"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M4 4h8l2 2h2a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1zm4 9V9H7v4h2zm2 0V9h1v4h-1zm3-4h1v2.5L14 9zM5 6v8h10V6H5z" />
-                </svg>
-              </div>
-              {t("create from CSV")}
-            </Button>
-          </Link>
+    <AnimatePresence mode="wait">
+      <motion.div
+        className="w-full space-y-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="flex justify-between">
+          <h1 className="text-3xl w-2/4 font-bold">{t("CreateParent")}</h1>
+          <div className="flex gap-2">
+            <Link href="/fromcsv/parent">
+              <Button variant={"secondary"}>
+                <div className="bg-gray-200 p-1 rounded-sm mr-2">
+                  <svg
+                    className="w-4 h-4 text-gray-600"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M4 4h8l2 2h2a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1zm4 9V9H7v4h2zm2 0V9h1v4h-1zm3-4h1v2.5L14 9zM5 6v8h10V6H5z" />
+                  </svg>
+                </div>
+                {t("create from CSV")}
+              </Button>
+            </Link>
 
-          <Link href={`/parents`}>
-            <Button>{t("back")}</Button>
-          </Link>
+            <Link href={`/parents`}>
+              <Button>{t("back")}</Button>
+            </Link>
+          </div>
         </div>
-      </div>
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit((values) =>
-            mutate({
-              ...values,
-              students: selectedStudents.map(Number) ?? [],
-            } as any)
-          )}
-          className="space-y-4"
-        >
-          <div className="flex w-full">
-            <div className="w-full space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <FormField
-                  control={form.control}
-                  name="given_name"
-                  render={({ field, formState }) => (
-                    <FormItem>
-                      <FormLabel>{t("ParentName")}</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder={t("ParentName")}
-                          type="text"
-                        />
-                      </FormControl>
-                      <FormMessage>
-                        {formState.errors.given_name &&
-                          "Parent name is required. Parent name should be more than 5 characters"}
-                      </FormMessage>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="family_name"
-                  render={({ field, formState }) => (
-                    <FormItem>
-                      <FormLabel>{t("ParentFamilyName")}</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder={t("ParentFamilyName")}
-                          type="text"
-                        />
-                      </FormControl>
-                      <FormMessage>
-                        {formState.errors.family_name &&
-                          "Parent family name is required. Parent family name should be more than 5 characters"}
-                      </FormMessage>
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field, formState }) => (
-                  <FormItem>
-                    <FormLabel>{t("ParentEmail")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={t("ParentEmail")}
-                        type="email"
-                      />
-                    </FormControl>
-                    <FormMessage>
-                      {formState.errors.email &&
-                        "Parent email is required. Parent email should be valid"}
-                    </FormMessage>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="phone_number"
-                render={({ field, formState }) => (
-                  <FormItem>
-                    <FormLabel>{t("ParentPhone")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={t("ParentPhone")}
-                        type="tel"
-                      />
-                    </FormControl>
-                    <FormMessage>
-                      {formState.errors.phone_number &&
-                        "Parent phone number is required. Parent phone number should be more than 10 characters"}
-                    </FormMessage>
-                  </FormItem>
-                )}
-              />
-
-              <FormItem>
-                <FormLabel>{t("Students")}</FormLabel>
-                <FormControl>
-                  <StudentTable
-                    selectedStudents={selectedStudents}
-                    setSelectedStudents={setSelectedStudents}
+        <Form {...form}>
+          <motion.form
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onSubmit={form.handleSubmit((values) =>
+              mutate({
+                ...values,
+                students: selectedStudents.map(Number) ?? [],
+              } as any)
+            )}
+            className="space-y-4"
+          >
+            <div className="flex w-full">
+              <div className="w-full space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <FormField
+                    control={form.control}
+                    name="given_name"
+                    render={({ field, formState }) => (
+                      <FormItem>
+                        <FormLabel>{t("ParentName")}</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder={t("ParentName")}
+                            type="text"
+                          />
+                        </FormControl>
+                        <FormMessage>
+                          {formState.errors.given_name &&
+                            "Parent name is required. Parent name should be more than 5 characters"}
+                        </FormMessage>
+                      </FormItem>
+                    )}
                   />
-                </FormControl>
-              </FormItem>
 
-              <div className="flex justify-between">
-                <Button disabled={isPending}>
-                  {t("CreateParent") + `${isPending ? "..." : ""}`}
-                </Button>
+                  <FormField
+                    control={form.control}
+                    name="family_name"
+                    render={({ field, formState }) => (
+                      <FormItem>
+                        <FormLabel>{t("ParentFamilyName")}</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder={t("ParentFamilyName")}
+                            type="text"
+                          />
+                        </FormControl>
+                        <FormMessage>
+                          {formState.errors.family_name &&
+                            "Parent family name is required. Parent family name should be more than 5 characters"}
+                        </FormMessage>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field, formState }) => (
+                    <FormItem>
+                      <FormLabel>{t("ParentEmail")}</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder={t("ParentEmail")}
+                          type="email"
+                        />
+                      </FormControl>
+                      <FormMessage>
+                        {formState.errors.email &&
+                          "Parent email is required. Parent email should be valid"}
+                      </FormMessage>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone_number"
+                  render={({ field, formState }) => (
+                    <FormItem>
+                      <FormLabel>{t("ParentPhone")}</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder={t("ParentPhone")}
+                          type="tel"
+                        />
+                      </FormControl>
+                      <FormMessage>
+                        {formState.errors.phone_number &&
+                          "Parent phone number is required. Parent phone number should be more than 10 characters"}
+                      </FormMessage>
+                    </FormItem>
+                  )}
+                />
+
+                <FormItem>
+                  <FormLabel>{t("Students")}</FormLabel>
+                  <FormControl>
+                    <StudentTable
+                      selectedStudents={selectedStudents}
+                      setSelectedStudents={setSelectedStudents}
+                    />
+                  </FormControl>
+                </FormItem>
+
+                <div className="flex justify-between">
+                  <Button disabled={isPending}>
+                    {t("CreateParent") + `${isPending ? "..." : ""}`}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        </form>
-      </Form>
-    </div>
+          </motion.form>
+        </Form>
+      </motion.div>
+    </AnimatePresence>
   );
 }

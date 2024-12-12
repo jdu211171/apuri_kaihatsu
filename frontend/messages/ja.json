@@ -381,6 +381,7 @@
     "name": "名前",
     "email": "メール",
     "studentId": "学生ID",
+    "placeholder": "名前で検索",
     "phoneNumber": "電話番号",
     "action": "操作",
     "view": "表示",

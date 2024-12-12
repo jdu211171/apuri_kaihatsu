@@ -376,6 +376,7 @@
   },
   "students": {
     "students": "Students",
+    "placeholder": "Search by name",
     "ID": "ID",
     "name": "Name",
     "email": "Email",

@@ -32,8 +32,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr] relative">
-      <div className="hidden border-r bg-muted/40 md:block ">
-        <div className="flex h-full max-h-screen flex-col gap-2 sticky top-0 z-50">
+      <div className="hidden border-r bg-muted/40 md:block relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-secondary/10 to-muted/10 backdrop-blur-xl" />
+        <div className="flex h-full max-h-screen flex-col gap-2 sticky top-0 z-50 relative">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link
               href="/"

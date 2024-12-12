@@ -379,6 +379,7 @@
     "ID": "ID",
     "name": "Name",
     "email": "Email",
+    "placeholder": "Поиск по имени",
     "studentId": "Student ID",
     "phoneNumber": "Phone Number",
     "action": "Action",
